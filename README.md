@@ -54,7 +54,7 @@ On-demand (user-triggered)
 | Recruiter Search | Hunter.io — free tier |
 | Notifications | Python smtplib + Gmail |
 | Scheduling | Windows Task Scheduler |
-| Logging | Loguru (2-day rotation) |
+| Logging | Loguru (7-day rotation) |
 
 ---
 
@@ -126,7 +126,7 @@ LOCATIONS = [
 ]
 
 MATCH_THRESHOLD    = 75   # shown in dashboard + email
-OUTREACH_THRESHOLD = 80   # outreach queue + Hunter API
+OUTREACH_THRESHOLD = 75   # outreach queue + Hunter API
 ```
 
 ---
@@ -137,7 +137,7 @@ OUTREACH_THRESHOLD = 80   # outreach queue + Hunter API
 |------|-------------|
 | Pipeline Overview | Stats, conversion funnel, top matches by source |
 | Job Feed | All scored jobs with filters (score, source, location, recency) |
-| Outreach Queue | 80%+ jobs — recruiter finder + email draft on demand |
+| Outreach Queue | 75%+ jobs — recruiter finder + email draft on demand |
 
 ---
 
