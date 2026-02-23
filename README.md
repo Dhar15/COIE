@@ -160,7 +160,12 @@ OUTREACH_THRESHOLD = 75   # outreach queue + Hunter API
 ```
 COIE/
 ├── api/
-│   └── main.py              FastAPI endpoints
+│   └── main.py             ← FastAPI endpoints
+├── dashboard/
+│   ├── src/
+        ├── assets/
+            ├── App.jsx     ← The front end dashboard
+│   ├── dist                ← created by npm build
 ├── scraper/
 │   ├── base_scraper.py
 │   ├── linkedin_scraper.py
