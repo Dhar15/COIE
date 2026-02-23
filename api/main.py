@@ -158,4 +158,4 @@ def perform_outreach(hash_id: str):
     }
 
 from fastapi.staticfiles import StaticFiles
-app.mount("/", StaticFiles(directory="../COIE-dashboard/dist", html=True), name="static")
+app.mount("/", StaticFiles(directory="dashboard/dist", html=True), name="static")
