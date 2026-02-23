@@ -1,0 +1,21 @@
+# Python
+env/
+__pycache__/
+*.pyc
+*.pyo
+.Python
+
+# Secrets
+.env
+
+# Data (personal — don't upload)
+data/coie.db
+data/seen_hashes.json
+scorer/resume.pdf
+
+# Logs
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
