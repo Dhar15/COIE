@@ -35,7 +35,7 @@ scheduler/runner.py          ← orchestrates the pipeline
 FastAPI (uvicorn, always-on)
     └── api/main.py           ← REST API + serves React dashboard
 
-React Dashboard (COIE-dashboard/)
+React Dashboard (dashboard/)
     └── src/App.jsx           ← Pipeline view, Job Feed, Outreach Queue
 
 On-demand (user-triggered)
