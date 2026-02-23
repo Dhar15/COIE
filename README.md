@@ -1,6 +1,6 @@
 # COIE — Career Outreach Intelligence Engine
 
-> A personal job search automation system that scrapes, scores, and surfaces the best PM roles — then helps you reach out to the right recruiter.
+> A personal job search automation system that scrapes, scores, and surfaces the best roles for you — then helps you reach out to the right recruiter.
 
 ---
 
@@ -8,7 +8,7 @@
 
 COIE runs automatically twice a day and:
 
-1. **Scrapes** LinkedIn and Naukri for Product Manager roles in Bengaluru and Hyderabad
+1. **Scrapes** LinkedIn and Naukri for desired roles at desired locations
 2. **Scores** each job against your resume using semantic AI (sentence-transformers)
 3. **Surfaces** high-match jobs in a live dashboard with filters and status tracking
 4. **Emails** you a digest with direct apply links — readable on your phone
@@ -116,11 +116,13 @@ Edit `config.py` to customize:
 KEYWORDS = [
     "Product Manager",
     "Associate Product Manager",
+    YOUR_DESIRED_ROLES,
 ]
 
 LOCATIONS = [
     "Bengaluru",
     "Hyderabad",
+    YOUR_DESIRED_LOCATIONS,
 ]
 
 MATCH_THRESHOLD    = 75   # shown in dashboard + email
