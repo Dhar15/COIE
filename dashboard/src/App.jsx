@@ -187,7 +187,7 @@ function ScoreBar({ score }) {
 }
 
 function StatusBadge({ status }) {
-  const map = { "Outreach Sent":"badge-purple","Replied":"badge-green","Interview":"badge-green","Shortlisted":"badge-yellow","New":"badge-gray","Rejected":"badge-red","Skipped":"badge-gray" };
+  const map = { "Outreach Sent":"badge-purple","Replied":"badge-green","Interview":"badge-green","New":"badge-gray","Rejected":"badge-red","Skipped":"badge-gray" };
   return <span className={`badge ${map[status]||"badge-gray"}`}>{status||"New"}</span>;
 }
 
@@ -415,7 +415,7 @@ function OutreachCard({ job: j, onStatusChange }) {
         )}
 
         {/* Status buttons */}
-        {["Shortlisted","Outreach Sent","Replied","Interview","Skipped"].map(s => (
+        {["Outreach Sent","Replied","Interview","Skipped"].map(s => (
           <button key={s}
             className={`action-btn ${status===s?"active":""}`}
             onClick={() => handleStatus(s)}>
