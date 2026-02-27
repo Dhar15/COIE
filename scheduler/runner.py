@@ -74,8 +74,10 @@ if __name__ == "__main__":
     # Run once immediately, then schedule
     run_pipeline()
 
-    h, m = RUN_TIME.split(":")
+    h, m = RUN_TIME1.split(":")
     scheduler = BlockingScheduler()
+    scheduler.add_job(run_pipeline, "cron", hour=int(h), minute=int(m))
+    h, m = RUN_TIME2.split(":")
     scheduler.add_job(run_pipeline, "cron", hour=int(h), minute=int(m))
     logger.info(f"Scheduler armed: next run at {RUN_TIME1} and {RUN_TIME2} daily")
     scheduler.start()
