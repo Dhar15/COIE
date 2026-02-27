@@ -4,18 +4,20 @@ from scheduler.notify import send_summary
 from loguru import logger
 import os
 
-from config import KEYWORDS, LOCATIONS, MATCH_THRESHOLD, OUTREACH_THRESHOLD, RUN_TIME
+from config import KEYWORDS, LOCATIONS, MATCH_THRESHOLD, OUTREACH_THRESHOLD, RUN_TIME1, RUN_TIME2
 from scraper.linkedin_scraper import LinkedInScraper
 from scraper.naukri_scraper   import NaukriScraper
 from scraper.deduplicator     import deduplicate
 from scorer.scorer            import score_jobs
-from storage.database         import init_db, insert_job, update_score
+from storage.database         import init_db, insert_job, update_score, cleanup_old_jobs
 
 os.makedirs("logs", exist_ok=True)
 logger.add("logs/coie.log", rotation="2 days", retention="7 days")
 
 
 def run_pipeline():
+    init_db()
+    cleanup_old_jobs(days=7)  
     logger.info("=" * 50)
     logger.info("COIE Pipeline Started")
     logger.info("=" * 50)
@@ -32,7 +34,6 @@ def run_pipeline():
     logger.info(f"After dedup: {len(unique_jobs)} unique jobs")
 
     # 3. Store all unique jobs
-    init_db()
     for job in unique_jobs:
         insert_job(job)
 
@@ -76,5 +77,5 @@ if __name__ == "__main__":
     h, m = RUN_TIME.split(":")
     scheduler = BlockingScheduler()
     scheduler.add_job(run_pipeline, "cron", hour=int(h), minute=int(m))
-    logger.info(f"Scheduler armed: next run at {RUN_TIME} daily")
+    logger.info(f"Scheduler armed: next run at {RUN_TIME1} and {RUN_TIME2} daily")
     scheduler.start()

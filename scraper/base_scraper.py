@@ -3,10 +3,39 @@ import hashlib
 from abc import ABC, abstractmethod
 from storage.models import Job
 from loguru import logger
-from datetime import datetime
+from datetime import datetime, timedelta
 
 class BaseScraper(ABC):
     SOURCE = ""
+
+    def normalize_posted(self, posted_text: str, source: str) -> str:
+        """Normalize posted_text to consistent relative format."""
+        if not posted_text:
+            return ""
+
+        text = posted_text.strip().lower()
+
+        # LinkedIn stores ISO dates like "2026-02-24"
+        if source == "LinkedIn":
+            try:
+                posted_date = datetime.strptime(posted_text.strip(), "%Y-%m-%d")
+                delta = (datetime.now() - posted_date).days
+                if delta == 0:
+                    return "Today"
+                elif delta == 1:
+                    return "1 day ago"
+                elif delta <= 7:
+                    return f"{delta} days ago"
+                elif delta <= 14:
+                    return "1 week ago"
+                else:
+                    return f"{delta // 7} weeks ago"
+            except ValueError:
+                return posted_text   
+
+        # Naukri sometimes says "Posted X days ago" — stripping the "Posted" prefix
+        text = text.replace("posted", "").replace("few", "1").strip()
+        return text.capitalize()
 
     def scrape(self, keywords: list[str], locations: list[str]) -> list[Job]:
         """
@@ -69,6 +98,6 @@ class BaseScraper(ABC):
             source      = self.SOURCE,
             url         = url,
             description = description,
-            posted_text = posted_text,
+            posted_text = self.normalize_posted(posted_text, self.SOURCE),
             scraped_at  = datetime.now().isoformat(),
         )

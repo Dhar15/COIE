@@ -2,6 +2,7 @@
 import sqlite3, os
 from storage.models import Job
 from config import DB_PATH
+from loguru import logger
 
 def get_conn():
     os.makedirs("data", exist_ok=True)
@@ -73,6 +74,16 @@ def insert_job(job):
             "",   # email_body
             "New" # status
         ))
+
+def cleanup_old_jobs(days: int = 7):
+    """Remove jobs older than N days that haven't been acted on."""
+    with get_conn() as conn:
+        deleted = conn.execute("""
+            DELETE FROM jobs
+            WHERE scraped_at < datetime('now', ? || ' days')
+            AND status IN ('New', 'Skipped')
+        """, (f"-{days}",)).rowcount
+    logger.info(f"Cleaned up {deleted} stale jobs older than {days} days")
 
 def update_score(hash_id: str, score: float):
     with get_conn() as conn:
