@@ -7,6 +7,20 @@ from loguru import logger
 load_dotenv()
 HUNTER_KEY = os.getenv("HUNTER_API_KEY")
 
+INDIA_SIGNALS = ["india", "bengaluru", "bangalore", "mumbai", 
+                 "hyderabad", "delhi", "pune", "chennai", "noida", "gurgaon"]
+
+def _is_india_based(person: dict) -> bool:
+    """Check if hunted person appears to be India-based."""
+    location = (person.get("country") or person.get("location") or "").lower()
+    # If no location data, assume India (most results for Indian companies will be)
+    if not location:
+        return True
+    # Reject if clearly a non-India country
+    non_india = ["united states", "us", "uk", "united kingdom", 
+                 "canada", "australia", "germany", "singapore"]
+    return not any(sig in location for sig in non_india)
+
 def find_recruiter(company_name: str, location: str = None) -> dict | None:
     if not HUNTER_KEY:
         logger.error("HUNTER_API_KEY not set in .env")
@@ -23,13 +37,23 @@ def find_recruiter(company_name: str, location: str = None) -> dict | None:
                 "type":           "personal",
                 "limit":          10,
                 "api_key":        HUNTER_KEY,
+                 "location": {
+                    "include": [
+                        { "country": "IN" }   
+                    ]
+                }
             },
             timeout=10
         )
         resp.raise_for_status()
         data   = resp.json().get("data", {})
         domain = data.get("domain", company_name)
+
         emails = data.get("emails", [])
+        india_emails = [e for e in emails if _is_india_based(e)]
+
+        # Fall back to all results if no India-based found
+        emails = india_emails if india_emails else emails
 
         if not emails:
             logger.warning(f"[Hunter] No HR emails found for {company_name} ({domain})")
