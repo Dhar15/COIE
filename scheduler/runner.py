@@ -35,6 +35,8 @@ def run_pipeline():
 
     # 3. Store all unique jobs
     for job in unique_jobs:
+        if not isinstance(job.title, str):
+            logger.warning(f"Bad title type: {type(job.title)} — {job.title} @ {job.company}")
         insert_job(job)
 
     # 4. Score

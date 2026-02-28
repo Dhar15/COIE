@@ -56,16 +56,16 @@ def insert_job(job):
                 email_subject, email_body, status
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
-            job.hash_id,
-            job.title,
-            job.company,
-            job.location,
-            job.source,
-            job.url,
-            job.description,
-            job.posted_text,
-            job.scraped_at,
-            job.match_score,
+            str(job.hash_id   or ""),
+            str(job.title     or ""),   
+            str(job.company   or ""),
+            str(job.location  or ""),
+            str(job.source    or ""),
+            str(job.url       or ""),
+            str(job.description or ""),
+            str(job.posted_text or ""),
+            str(job.scraped_at  or ""),
+            float(job.match_score or 0),
             "",   # recruiter
             "",   # recruiter_title
             "",   # recruiter_email
@@ -89,7 +89,7 @@ def update_score(hash_id: str, score: float):
     with get_conn() as conn:
         conn.execute(
             "UPDATE jobs SET match_score=? WHERE hash_id=?",
-            (score, hash_id))
+            (float(score), str(hash_id)))
 
 def get_all_jobs() -> list:
     with get_conn() as conn:

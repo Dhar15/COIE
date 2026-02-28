@@ -88,7 +88,7 @@ class BaseScraper(ABC):
 
     def make_job(self, title, company, location, url, description="", posted_text="") -> Job:
         # Generate hash from url (unique identifier)
-        hash_id = hashlib.sha256(url.encode()).hexdigest()[:16]
+        hash_id = hashlib.sha256(url.encode()).hexdigest()[:16] 
 
         return Job(
             hash_id     = hash_id,
