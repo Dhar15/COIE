@@ -2,12 +2,11 @@
 from sentence_transformers import SentenceTransformer, util
 from scorer.resume_parser import extract_resume_text
 from storage.models import Job
-from config import MATCH_THRESHOLD
 from loguru import logger
 
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
-def score_jobs(jobs: list[Job]) -> list[Job]:
+def score_jobs(jobs: list[Job], match_threshold: float = 75) -> list[Job]:
     resume_text = extract_resume_text()
     resume_emb  = model.encode(resume_text, convert_to_tensor=True)
     scored, passed = [], 0
@@ -26,11 +25,11 @@ def score_jobs(jobs: list[Job]) -> list[Job]:
         # cos_sim returns -1 to 1, normalize to 0-100
         job.match_score = round(((similarity + 1) / 2) * 100, 1)
 
-        if job.match_score >= MATCH_THRESHOLD:
+        if job.match_score >= match_threshold:
             passed += 1
 
         scored.append(job)
         logger.info(f"  {job.match_score}% — {job.title} @ {job.company}")
 
-    logger.info(f"Scoring complete: {passed}/{len(scored)} above {MATCH_THRESHOLD}%")
+    logger.info(f"Scoring complete: {passed}/{len(scored)} above {match_threshold}%")
     return sorted(scored, key=lambda j: j.match_score, reverse=True)

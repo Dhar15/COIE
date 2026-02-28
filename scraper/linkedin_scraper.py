@@ -7,11 +7,24 @@ from loguru import logger
 
 # Geographic IDs (confirmed correct)
 GEO_IDS = {
-    "Bengaluru": "105307040",
+    "Bengaluru":  "105307040",
     "Bangalore":  "105307040",
     "Hyderabad":  "102639115",
     "Mumbai":     "103977742",
-    "Remote":     "102713980",  # India-wide for remote
+    "Delhi":      "102713980",
+    "New Delhi":  "102713980",
+    "Hyderabad":  "102639115",
+    "Chennai":    "102132239",
+    "Pune":       "106164611",
+    "Kolkata":    "105556402",
+     # Tier 2
+    "Ahmedabad":  "106137773",
+    "Gurgaon":    "102317571",
+    "Gurugram":   "102317571",
+    "Noida":      "102141443",
+    "Navi Mumbai":"105978988",
+    "Remote":     "102713980",  
+    "India":      "102713980",
 }
 
 BLOCKED_SIGNALS = [
@@ -69,9 +82,20 @@ class LinkedInScraper(BaseScraper):
             browser.close()
         return jobs
 
+    def _get_geo_id(self, location: str) -> str:
+        geo = GEO_IDS.get(location)
+        if geo:
+            return geo
+        loc_lower = location.lower()
+        for key, val in GEO_IDS.items():
+            if key.lower() in loc_lower or loc_lower in key.lower():
+                return val
+        logger.warning(f"[LinkedIn] Unknown location '{location}' — using India-wide geoId")
+        return "102713980"    
+
     def _scrape_one(self, listing_page: Page, keyword: str, location: str) -> list[Job]:
 
-        geo_id = GEO_IDS.get(location, "102713980")  # fallback to India
+        geo_id = self._get_geo_id(location)# fallback to India
 
         url = (
             "https://in.linkedin.com/jobs/search/"   # ← Indian subdomain

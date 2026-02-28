@@ -1,0 +1,13 @@
+{
+  "keywords": [
+    "Associate Product Manager",
+    "Consultant",
+    "Presales Consultant"
+  ],
+  "locations": [
+    "Bangalore",
+    "Bengaluru"
+  ],
+  "match_threshold": 70,
+  "outreach_threshold": 75
+}

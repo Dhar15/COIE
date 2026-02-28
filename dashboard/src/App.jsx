@@ -308,6 +308,158 @@ function UnscoredSection({ jobs, onStatusChange }) {
   );
 }
 
+function SettingsPanel({ onSave }) {
+  const cfg = useFetch(`${API}/api/config`);
+  const [form, setForm] = useState(null);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (cfg.data && !form) setForm(cfg.data);
+  }, [cfg.data]);
+
+  const handleSave = async () => {
+    await fetch(`${API}/api/config`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(form),
+    });
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
+    onSave();
+  };
+
+  const updateList = (key, idx, value) => {
+    const list = [...form[key]];
+    list[idx] = value;
+    setForm({ ...form, [key]: list });
+  };
+
+  const addItem = (key) =>
+    setForm({ ...form, [key]: [...form[key], ""] });
+
+  const removeItem = (key, idx) =>
+    setForm({ ...form, [key]: form[key].filter((_, i) => i !== idx) });
+
+  if (!form) return <div className="loading"><div className="spinner"/>Loading config...</div>;
+
+  return (
+    <>
+      <div className="page-header">
+        <div>
+          <div className="page-title">Pipeline <span>Settings</span></div>
+          <div className="page-sub">Changes apply on the next scheduled run</div>
+        </div>
+        <button
+          className="refresh-btn"
+          onClick={handleSave}
+          style={{ background: saved ? "var(--accent2)" : "var(--accent)" }}
+        >
+          {saved ? "✓ Saved" : "Save Changes"}
+        </button>
+      </div>
+
+      <div className="two-col">
+        {/* Keywords */}
+        <div className="card">
+          <div className="card-title">Search Keywords</div>
+          {form.keywords.map((kw, i) => (
+            <div key={i} style={{ display:"flex", gap:8, marginBottom:8 }}>
+              <input
+                value={kw}
+                onChange={e => updateList("keywords", i, e.target.value)}
+                style={{ flex:1, background:"var(--surface2)", border:"1px solid var(--border)",
+                         color:"var(--text)", padding:"6px 10px", borderRadius:6,
+                         fontFamily:"JetBrains Mono", fontSize:12 }}
+              />
+              <button
+                onClick={() => removeItem("keywords", i)}
+                className="action-btn"
+                style={{ color:"var(--danger)", borderColor:"rgba(255,71,87,0.3)" }}
+              >✕</button>
+            </div>
+          ))}
+          <button className="action-btn" onClick={() => addItem("keywords")}
+            style={{ color:"var(--accent)", borderColor:"rgba(0,229,160,0.3)", marginTop:4 }}>
+            + Add Keyword
+          </button>
+        </div>
+
+        {/* Locations */}
+        <div className="card">
+          <div className="card-title">Locations</div>
+          {form.locations.map((loc, i) => (
+            <div key={i} style={{ display:"flex", gap:8, marginBottom:8 }}>
+              <input
+                value={loc}
+                onChange={e => updateList("locations", i, e.target.value)}
+                style={{ flex:1, background:"var(--surface2)", border:"1px solid var(--border)",
+                         color:"var(--text)", padding:"6px 10px", borderRadius:6,
+                         fontFamily:"JetBrains Mono", fontSize:12 }}
+              />
+              <button
+                onClick={() => removeItem("locations", i)}
+                className="action-btn"
+                style={{ color:"var(--danger)", borderColor:"rgba(255,71,87,0.3)" }}
+              >✕</button>
+            </div>
+          ))}
+          <button className="action-btn" onClick={() => addItem("locations")}
+            style={{ color:"var(--accent)", borderColor:"rgba(0,229,160,0.3)", marginTop:4 }}>
+            + Add Location
+          </button>
+        </div>
+      </div>
+
+      {/* Thresholds */}
+      <div className="card" style={{ marginTop:0 }}>
+        <div className="card-title">Match Thresholds</div>
+        <div className="two-col" style={{ marginBottom:0 }}>
+          <div>
+            <div style={{ fontSize:12, color:"var(--muted)", marginBottom:8, fontFamily:"JetBrains Mono" }}>
+              Dashboard Threshold — jobs shown in Job Feed and email digest
+            </div>
+            <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+              <input type="range" min={50} max={95} value={form.match_threshold}
+                onChange={e => setForm({...form, match_threshold: Number(e.target.value)})}
+                style={{ flex:1, accentColor:"var(--accent)" }}
+              />
+              <span style={{ fontSize:20, fontWeight:800, color:"var(--accent)",
+                             fontFamily:"JetBrains Mono", minWidth:48 }}>
+                {form.match_threshold}%
+              </span>
+            </div>
+          </div>
+          <div>
+            <div style={{ fontSize:12, color:"var(--muted)", marginBottom:8, fontFamily:"JetBrains Mono" }}>
+              Outreach Threshold — jobs shown in Outreach Queue, triggers Hunter API
+            </div>
+            <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+              <input type="range" min={50} max={95} value={form.outreach_threshold}
+                onChange={e => setForm({...form, outreach_threshold: Number(e.target.value)})}
+                style={{ flex:1, accentColor:"var(--accent2)" }}
+              />
+              <span style={{ fontSize:20, fontWeight:800, color:"var(--accent2)",
+                             fontFamily:"JetBrains Mono", minWidth:48 }}>
+                {form.outreach_threshold}%
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Info box */}
+      <div style={{ marginTop:16, padding:"12px 16px", background:"rgba(123,97,255,0.06)",
+                    border:"1px solid rgba(123,97,255,0.2)", borderRadius:8,
+                    fontSize:11, color:"var(--muted)", fontFamily:"JetBrains Mono", lineHeight:1.8 }}>
+        ⚙ Keyword and location changes affect the <strong style={{color:"var(--text)"}}>next pipeline run</strong> only —
+        existing jobs in the database are not affected. To rescrape with new settings, delete
+        <strong style={{color:"var(--accent)"}}> data/coie.db</strong> and
+        <strong style={{color:"var(--accent)"}}> data/seen_hashes.json</strong> before the next run.
+      </div>
+    </>
+  );
+}
+
 function OutreachCard({ job: j, onStatusChange }) {
   const [status, setStatus]   = useState(j.status || "New");
   const [showDraft, setShowDraft] = useState(false);
@@ -445,12 +597,12 @@ function OutreachCard({ job: j, onStatusChange }) {
   );
 }
 
-function FiltersBar({ filters, onChange, sources, locations }) {
+function FiltersBar({ filters, onChange, sources, locations, threshold }) {
   return (
     <div className="filters-bar">
       <span className="filter-label">Filter:</span>
       <select className="filter-select" value={filters.minScore} onChange={e => onChange({...filters, minScore:Number(e.target.value)})}>
-        <option value={0}>All scores</option>
+        <option value={0}>Above threshold ({threshold}%)</option>
         <option value={60}>60%+</option>
         <option value={70}>70%+</option>
         <option value={75}>75%+</option>
@@ -494,11 +646,15 @@ export default function COIE() {
       .map(j => j.location?.split(",")[0].trim())
       .filter(Boolean)
   )].sort();
-  const scoredJobs   = (allJobs.data||[]).filter(j => j.match_score > 0);
-  const unscoredJobs = (allJobs.data||[]).filter(j => j.match_score <= 0);
-  const filteredJobs = applyFilters(scoredJobs, filters);
   const threshold    = stats.data?.threshold || 75;
   const outreachThreshold = stats.data?.outreach_threshold || 80;
+  console.log("threshold:", threshold, "scoredJobs:", scoredJobs.length, "allJobs:", allJobs.data?.length);
+  const scoredJobs   = (allJobs.data||[]).filter(j => j.match_score >= threshold);
+  const unscoredJobs = (allJobs.data||[]).filter(j => j.match_score <= 0);
+  const filteredJobs = applyFilters(scoredJobs, {
+    ...filters,
+    minScore: Math.max(filters.minScore, threshold)  
+  });  
   const apiError     = stats.error || allJobs.error;
 
   const navItems = [
@@ -510,6 +666,7 @@ export default function COIE() {
       badge: (allJobs.data||[]).filter(j => j.match_score >= (stats.data?.outreach_threshold||80)).length, 
       warn:true 
     },
+    { id:"settings", icon:"⚙", label:"Settings" }
   ];
 
   return (
@@ -630,7 +787,7 @@ export default function COIE() {
                   <div className="page-title">Job <span>Feed</span></div>
                   <div className="page-sub">{filteredJobs.length} scored · {unscoredJobs.length} unscored</div>
                 </div>
-                <FiltersBar filters={filters} onChange={setFilters} sources={sources} locations={locations}/>
+                <FiltersBar filters={filters} onChange={setFilters} sources={sources} locations={locations} threshold={threshold}/>
               </div>
               {allJobs.loading ? <div className="loading"><div className="spinner"/>Loading...</div> : <>
                 <div className="card">
@@ -658,7 +815,7 @@ export default function COIE() {
                     {filteredJobs.filter(j => j.match_score >= outreachThreshold && j.status !== "Rejected" && j.status !== "Skipped").length} jobs above {outreachThreshold}% · review before sending
                   </div>
                 </div>
-                <FiltersBar filters={filters} onChange={setFilters} sources={sources} locations={locations}/>
+                <FiltersBar filters={filters} onChange={setFilters} sources={sources} locations={locations} threshold={threshold}/>
               </div>
               {allJobs.loading ? <div className="loading"><div className="spinner"/>Loading...</div> : <>
                 {filteredJobs
@@ -667,6 +824,10 @@ export default function COIE() {
                 }
               </>}
             </>
+          )}
+
+          {nav === "settings" && (
+            <SettingsPanel onSave={() => { stats.refetch(); allJobs.refetch(); }} />
           )}
         </main>
       </div>

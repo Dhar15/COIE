@@ -5,15 +5,18 @@ import sqlite3
 import os
 import sys
 from storage.database import init_db
+from config import DB_PATH
+import json
 
-# Allow imports from project root
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import MATCH_THRESHOLD, OUTREACH_THRESHOLD, DB_PATH
+CONFIG_PATH = "data/config.json"
+DEFAULT_CONFIG = {
+    "keywords":           ["Product Manager", "Associate Product Manager"],
+    "locations":          ["Bengaluru", "Hyderabad"],
+    "match_threshold":    75,
+    "outreach_threshold": 75,
+}
 
 app = FastAPI(title="COIE API")
-@app.on_event("startup")
-def startup():
-    init_db()
 
 app.add_middleware(
     CORSMiddleware,
@@ -22,10 +25,39 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.on_event("startup")
+def startup():
+    init_db()
+
 def get_conn():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
+def read_config() -> dict:
+    if os.path.exists(CONFIG_PATH):
+        with open(CONFIG_PATH) as f:
+            return json.load(f)
+    return DEFAULT_CONFIG.copy()
+
+def write_config(cfg: dict):
+    os.makedirs("data", exist_ok=True)
+    with open(CONFIG_PATH, "w") as f:
+        json.dump(cfg, f, indent=2)
+
+@app.get("/api/config")
+def get_config():
+    return read_config()
+
+@app.patch("/api/config")
+def update_config(body: dict):
+    cfg = read_config()
+    # Only update known keys — ignore anything else
+    for key in ["keywords", "locations", "match_threshold", "outreach_threshold"]:
+        if key in body:
+            cfg[key] = body[key]
+    write_config(cfg)
+    return cfg
 
 @app.get("/api/jobs")
 def get_jobs(min_score: float = 0, limit: int = 100):
@@ -51,7 +83,7 @@ def get_stats():
         total = conn.execute("SELECT COUNT(*) FROM jobs").fetchone()[0]
         high  = conn.execute(
             "SELECT COUNT(*) FROM jobs WHERE match_score >= ?",
-            (MATCH_THRESHOLD,)
+            (read_config()["match_threshold"],)
         ).fetchone()[0]
         # Count jobs that ever reached "Outreach Sent" or beyond
         sent = conn.execute("""
@@ -73,15 +105,15 @@ def get_stats():
             WHERE match_score >= ?
             ORDER BY match_score DESC
             LIMIT 5
-        """, (MATCH_THRESHOLD,)).fetchall()
+        """,(read_config()["match_threshold"],)).fetchall()
 
     return {
         "total_scraped":        total,
         "high_match":           high,
         "outreach_sent":        sent,
         "replies":              replied,
-        "threshold":            MATCH_THRESHOLD,
-        "outreach_threshold":   OUTREACH_THRESHOLD,
+        "threshold":            read_config()["match_threshold"],
+        "outreach_threshold":   read_config()["outreach_threshold"],
         "reply_rate":           round((replied / sent * 100) if sent > 0 else 0, 1),
         "by_source":            [dict(r) for r in by_source],
         "top_jobs":             [dict(r) for r in top_jobs],

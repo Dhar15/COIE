@@ -3,21 +3,41 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from scheduler.notify import send_summary
 from loguru import logger
 import os
+import json
 
-from config import KEYWORDS, LOCATIONS, MATCH_THRESHOLD, OUTREACH_THRESHOLD, RUN_TIME1, RUN_TIME2
 from scraper.linkedin_scraper import LinkedInScraper
 from scraper.naukri_scraper   import NaukriScraper
 from scraper.deduplicator     import deduplicate
 from scorer.scorer            import score_jobs
 from storage.database         import init_db, insert_job, update_score, cleanup_old_jobs
+from config                   import RUN_TIME1, RUN_TIME2
 
 os.makedirs("logs", exist_ok=True)
 logger.add("logs/coie.log", rotation="2 days", retention="7 days")
 
+def load_config():
+    path = "data/config.json"
+    default = {
+        "keywords":           ["Product Manager", "Associate Product Manager"],
+        "locations":          ["Bengaluru", "Hyderabad"],
+        "match_threshold":    75,
+        "outreach_threshold": 80,
+    }
+    if os.path.exists(path):
+        with open(path) as f:
+            return {**default, **json.load(f)}
+    return default
 
 def run_pipeline():
+    cfg                = load_config()        #Fresh read every run
+    KEYWORDS           = cfg["keywords"]
+    LOCATIONS          = cfg["locations"]
+    MATCH_THRESHOLD    = cfg["match_threshold"]
+    OUTREACH_THRESHOLD = cfg["outreach_threshold"]
+
     init_db()
-    cleanup_old_jobs(days=7)  
+    cleanup_old_jobs(days=7)
+
     logger.info("=" * 50)
     logger.info("COIE Pipeline Started")
     logger.info("=" * 50)
@@ -40,7 +60,7 @@ def run_pipeline():
         insert_job(job)
 
     # 4. Score
-    scored_jobs = score_jobs(unique_jobs)
+    scored_jobs = score_jobs(unique_jobs, match_threshold=MATCH_THRESHOLD)
 
     # 5. Update scores in DB
     for job in scored_jobs:
