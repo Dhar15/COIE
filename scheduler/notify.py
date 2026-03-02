@@ -70,7 +70,7 @@ def send_summary(total, unique, high_match, threshold, top_jobs):
         <!-- Top jobs table -->
         <h2 style="font-size:13px;letter-spacing:1.2px;text-transform:uppercase;
                    color:#5a6175;margin-bottom:12px;">
-          Top Matches
+          Top 10 Matches
         </h2>
         <table style="width:100%;border-collapse:collapse;background:#111318;
                       border:1px solid #1f2430;border-radius:8px;overflow:hidden;">
