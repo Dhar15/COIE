@@ -87,7 +87,7 @@ def run_pipeline():
              "match_score": j.match_score, 
              "source": j.source,
              "url": j.url}
-            for j in scored_jobs[:5]
+            for j in scored_jobs[:10]
         ]
     )
 

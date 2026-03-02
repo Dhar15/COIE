@@ -8,6 +8,6 @@
     "Bangalore",
     "Bengaluru"
   ],
-  "match_threshold": 70,
+  "match_threshold": 60,
   "outreach_threshold": 75
 }

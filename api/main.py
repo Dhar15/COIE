@@ -70,9 +70,24 @@ def get_jobs(min_score: float = 0, limit: int = 100):
                    recruiter_linkedin, email_subject, email_body, status
             FROM jobs
             WHERE match_score >= ?
+            AND status NOT IN ('Skipped', 'Rejected')  
             ORDER BY match_score DESC
             LIMIT ?
         """, (min_score, limit)).fetchall()
+    return [dict(r) for r in rows]
+
+@app.get("/api/jobs/skipped")
+def get_skipped_jobs():
+    with get_conn() as conn:
+        rows = conn.execute("""
+            SELECT hash_id, title, company, location, source,
+                   url, posted_text, scraped_at, match_score,
+                   recruiter, recruiter_title, recruiter_email,
+                   recruiter_linkedin, email_subject, email_body, status
+            FROM jobs
+            WHERE status = 'Skipped'
+            ORDER BY match_score DESC
+        """).fetchall()
     return [dict(r) for r in rows]
 
 
@@ -103,6 +118,7 @@ def get_stats():
             SELECT title, company, match_score, source, status
             FROM jobs
             WHERE match_score >= ?
+            AND status NOT IN ('Skipped', 'Rejected')
             ORDER BY match_score DESC
             LIMIT 5
         """,(read_config()["match_threshold"],)).fetchall()

@@ -308,6 +308,71 @@ function UnscoredSection({ jobs, onStatusChange }) {
   );
 }
 
+function SkippedSection({ jobs, onStatusChange }) {
+  const [open, setOpen] = useState(false);
+  if (!jobs.length) return null;
+  return (
+    <div style={{ marginTop:8, background:"var(--surface)", border:"1px solid var(--border)", borderRadius:12, overflow:"hidden" }}>
+      <div className="unscored-header" onClick={() => setOpen(o => !o)}>
+        <span style={{ fontSize:13, fontWeight:700, color:"var(--muted)" }}>Skipped Jobs</span>
+        <span className="badge badge-gray">{jobs.length}</span>
+        <span style={{ fontSize:11, color:"var(--muted)", fontFamily:"JetBrains Mono" }}>Marked as not relevant</span>
+        <span className={`chevron ${open?"open":""}`}>▶</span>
+      </div>
+      {open && (
+        <div className="table-wrap" style={{ padding:"0 0 8px" }}>
+          <table>
+            <thead>
+              <tr><th>Role</th><th>Company</th><th>Source</th><th>Match</th><th>Posted</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+              {jobs.map(j => (
+                <SkippedRow key={j.hash_id} job={j} onStatusChange={onStatusChange}/>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SkippedRow({ job: j, onStatusChange }) {
+  const [status, setStatus] = useState(j.status || "Skipped");
+  const handle = async (e) => {
+    const s = e.target.value;
+    setStatus(s);
+    await patchStatus(j.hash_id, s);
+    onStatusChange();
+  };
+  return (
+    <tr>
+      <td style={{ fontWeight:600, maxWidth:220 }}>
+        <a href={j.url} target="_blank" rel="noreferrer"
+           style={{ color:"var(--muted)", textDecoration:"none" }} title={j.title}>
+          {j.title.length > 38 ? j.title.slice(0,38)+"…" : j.title}
+        </a>
+      </td>
+      <td style={{ color:"var(--muted)", fontSize:12 }}>{j.company}</td>
+      <td><SourcePill source={j.source}/></td>
+      <td style={{ minWidth:130 }}><ScoreBar score={j.match_score}/></td>
+      <td style={{ color:"var(--muted)", fontFamily:"JetBrains Mono", fontSize:10, whiteSpace:"nowrap" }}>
+        {j.posted_text||"—"}
+      </td>
+      <td>
+        <select className="status-select" value={status} onChange={handle}>
+          {STATUSES.map(s => <option key={s}>{s}</option>)}
+        </select>
+      </td>
+      <td>
+        <a href={j.url} target="_blank" rel="noreferrer">
+          <button className="action-btn open-link">↗</button>
+        </a>
+      </td>
+    </tr>
+  );
+}
+
 function SettingsPanel({ onSave }) {
   const cfg = useFetch(`${API}/api/config`);
   const [form, setForm] = useState(null);
@@ -637,8 +702,15 @@ export default function COIE() {
 
   const stats   = useFetch(`${API}/api/stats`);
   const allJobs = useFetch(`${API}/api/jobs?limit=500`);
+  const skippedJobs = useFetch(`${API}/api/jobs/skipped`);
+  console.log("Skipped jobs:", skippedJobs.data);
 
-  const refresh = () => { stats.refetch(); allJobs.refetch(); setLastRun(new Date().toLocaleTimeString()); };
+  const refresh = () => { 
+    stats.refetch(); 
+    allJobs.refetch(); 
+    skippedJobs.refetch();
+    setLastRun(new Date().toLocaleTimeString()); 
+  };
 
   const sources      = [...new Set((allJobs.data||[]).map(j => j.source))].filter(Boolean);
   const locations = [...new Set(
@@ -648,8 +720,7 @@ export default function COIE() {
   )].sort();
   const threshold    = stats.data?.threshold || 75;
   const outreachThreshold = stats.data?.outreach_threshold || 80;
-  console.log("threshold:", threshold, "scoredJobs:", scoredJobs.length, "allJobs:", allJobs.data?.length);
-  const scoredJobs   = (allJobs.data||[]).filter(j => j.match_score >= threshold);
+  const scoredJobs   = (allJobs.data||[]).filter(j => j.match_score >= threshold && j.status !== "Skipped");
   const unscoredJobs = (allJobs.data||[]).filter(j => j.match_score <= 0);
   const filteredJobs = applyFilters(scoredJobs, {
     ...filters,
@@ -802,6 +873,10 @@ export default function COIE() {
                   </div>
                 </div>
                 <UnscoredSection jobs={unscoredJobs} onStatusChange={allJobs.refetch}/>
+                 <SkippedSection 
+                  jobs={skippedJobs.data || []} 
+                  onStatusChange={() => { allJobs.refetch(); skippedJobs.refetch(); }}
+                />
               </>}
             </>
           )}
