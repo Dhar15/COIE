@@ -21,7 +21,7 @@ def load_config():
         "keywords":           ["Product Manager", "Associate Product Manager"],
         "locations":          ["Bengaluru", "Hyderabad"],
         "match_threshold":    75,
-        "outreach_threshold": 80,
+        "outreach_threshold": 75,
     }
     if os.path.exists(path):
         with open(path) as f:
@@ -82,13 +82,15 @@ def run_pipeline():
         high_match = len(high),
         threshold  = MATCH_THRESHOLD,
         top_jobs   = [
-            {"title": j.title, 
-            "company": j.company,
-             "match_score": j.match_score, 
-             "source": j.source,
-             "url": j.url}
-            for j in scored_jobs[:10]
-        ]
+            {
+                "title": j.title, 
+                "company": j.company,
+                "match_score": j.match_score, 
+                "source": j.source,
+                "url": j.url
+            }
+            for j in high
+        ][:10]  # Top 10 jobs
     )
 
 
