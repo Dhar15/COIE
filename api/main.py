@@ -1,6 +1,10 @@
 # api/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment
+from io import BytesIO
 import sqlite3
 import os
 import sys
@@ -204,6 +208,93 @@ def perform_outreach(hash_id: str):
         "email_subject":    email["subject"],
         "email_body":       email["body"],
     }
+
+@app.get("/api/jobs/export")
+def export_jobs():
+    cfg = read_config()
+    with get_conn() as conn:
+        rows = conn.execute("""
+            SELECT title, company, location, source, match_score,
+                   posted_text, status, url, recruiter, recruiter_email
+            FROM jobs
+            WHERE match_score > 0
+            AND status NOT IN ('Skipped', 'Rejected')
+            ORDER BY match_score DESC
+        """).fetchall()
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "COIE Job Feed"
+
+    # Header style
+    header_fill = PatternFill("solid", fgColor="1B4F72")
+    header_font = Font(bold=True, color="FFFFFF", name="Calibri", size=11)
+    header_align = Alignment(horizontal="center", vertical="center")
+
+    headers = ["Title", "Company", "Location", "Source", "Match Score",
+               "Posted", "Status", "Recruiter", "Recruiter Email", "URL"]
+    col_widths = [35, 25, 20, 12, 14, 14, 16, 22, 30, 50]
+
+    for i, (header, width) in enumerate(zip(headers, col_widths), 1):
+        cell = ws.cell(row=1, column=i, value=header)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = header_align
+        ws.column_dimensions[openpyxl.utils.get_column_letter(i)].width = width
+
+    ws.row_dimensions[1].height = 20
+
+    # Score color coding
+    def score_fill(score):
+        if score >= 80:   return PatternFill("solid", fgColor="D5F5E3")  # green
+        elif score >= 75: return PatternFill("solid", fgColor="FEF9E7")  # yellow
+        else:             return PatternFill("solid", fgColor="F2F3F4")  # gray
+
+    # Data rows
+    for ri, row in enumerate(rows, 2):
+        values = [
+            row["title"],
+            row["company"],
+            row["location"],
+            row["source"],
+            f"{row['match_score']}%",
+            row["posted_text"] or "—",
+            row["status"],
+            row["recruiter"] or "—",
+            row["recruiter_email"] or "—",
+            row["url"],
+        ]
+        fill = score_fill(row["match_score"])
+        for ci, value in enumerate(values, 1):
+            cell = ws.cell(row=ri, column=ci, value=value)
+            cell.font = Font(name="Calibri", size=10)
+            cell.alignment = Alignment(vertical="center", wrap_text=False)
+            # Color code score column and row
+            if ci == 5:
+                cell.fill = fill
+                cell.font = Font(name="Calibri", size=10, bold=True)
+
+        ws.row_dimensions[ri].height = 16
+
+    # Freeze header row
+    ws.freeze_panes = "A2"
+
+    # Auto filter
+    ws.auto_filter.ref = f"A1:J{len(rows)+1}"
+
+    # Save to buffer
+    buffer = BytesIO()
+    wb.save(buffer)
+    buffer.seek(0)
+
+    from datetime import datetime
+    filename = f"COIE_Jobs_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx"
+
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
+    )
 
 from fastapi.staticfiles import StaticFiles
 app.mount("/", StaticFiles(directory="dashboard/dist", html=True), name="static")

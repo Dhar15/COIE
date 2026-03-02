@@ -712,6 +712,10 @@ export default function COIE() {
     setLastRun(new Date().toLocaleTimeString()); 
   };
 
+  const downloadJobs = () => {
+    window.open(`${API}/api/jobs/export`, "_blank");
+  };
+
   const sources      = [...new Set((allJobs.data||[]).map(j => j.source))].filter(Boolean);
   const locations = [...new Set(
     (allJobs.data||[])
@@ -858,7 +862,16 @@ export default function COIE() {
                   <div className="page-title">Job <span>Feed</span></div>
                   <div className="page-sub">{filteredJobs.length} scored · {unscoredJobs.length} unscored</div>
                 </div>
-                <FiltersBar filters={filters} onChange={setFilters} sources={sources} locations={locations} threshold={threshold}/>
+                <div style={{ display:"flex", gap:20, alignItems:"center", flexWrap:"wrap" }}>
+                  <FiltersBar filters={filters} onChange={setFilters} sources={sources} locations={locations} threshold={threshold}/>
+                  <button
+                    className="refresh-btn"
+                    onClick={downloadJobs}
+                    style={{ background:"var(--accent2)", display:"flex", alignItems:"center", gap:6 }}
+                  >
+                    ↓ Export
+                  </button>
+                </div>
               </div>
               {allJobs.loading ? <div className="loading"><div className="spinner"/>Loading...</div> : <>
                 <div className="card">
