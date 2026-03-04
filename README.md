@@ -1,6 +1,6 @@
-# COIE — Career Outreach Intelligence Engine
+# COIE - Career Outreach Intelligence Engine
 
-> A personal job search automation system that scrapes, scores, and surfaces the best roles for you — then helps you reach out to the right recruiter.
+> A personal job search automation system that scrapes, scores, and surfaces the best roles for you - then helps you reach out to the right recruiter.
 
 ![Pipeline Overview](screenshots/Pipeline%20Overview.png)
 ![Job Feed](screenshots/Job%20Feed.png)
@@ -15,9 +15,9 @@ COIE runs automatically twice a day and:
 1. **Scrapes** LinkedIn, Naukri, and Indeed for desired roles at desired locations
 2. **Scores** each job against your resume using semantic AI (sentence-transformers) with experience and seniority penalties
 3. **Surfaces** high-match jobs in a live dashboard with filters, status tracking, and Excel export
-4. **Emails** you a digest with the top 10 matches and direct apply links — readable on your phone
+4. **Emails** you a digest with the top 10 matches and direct apply links - readable on your phone
 5. **Discovers** recruiter contacts via Hunter.io (India-filtered) when you decide to pursue a role
-6. **Drafts** a personalized 4–6 line outreach email via Groq (Llama 3.1) — opens pre-filled in Gmail
+6. **Drafts** a personalized 4–6 line outreach email via Groq (Llama 3.1) - opens pre-filled in Gmail
 
 ---
 
@@ -54,8 +54,8 @@ On-demand (user-triggered)
 | Backend | FastAPI + uvicorn |
 | Database | SQLite |
 | Frontend | React + Vite |
-| Email Generation | Groq API (Llama 3.1 8B) — free |
-| Recruiter Search | Hunter.io — free tier |
+| Email Generation | Groq API (Llama 3.1 8B) - free |
+| Recruiter Search | Hunter.io - free tier |
 | Notifications | Python smtplib + Gmail |
 | Scheduling | Windows Task Scheduler |
 | Logging | Loguru (7-day rotation) |
@@ -114,7 +114,7 @@ npm run build
 
 ## Configuration
 
-All user-facing settings are configurable from the **Settings panel** in the dashboard — no code changes needed. Settings are saved to `data/config.json` and take effect on the next pipeline run.
+All user-facing settings are configurable from the **Settings panel** in the dashboard - no code changes needed. Settings are saved to `data/config.json` and take effect on the next pipeline run.
 
 | Setting | Description | Default |
 |---------|-------------|---------|
@@ -146,9 +146,9 @@ CANDIDATE_LEVEL = "mid"  # "junior" | "mid" | "senior"
 
 COIE uses a hybrid scoring approach:
 
-1. **Semantic similarity** — resume and JD are embedded using `all-MiniLM-L6-v2` and compared with cosine similarity
-2. **Experience penalty** — jobs requiring significantly more years than you have are penalized (up to 45% reduction)
-3. **Seniority penalty** — Senior/Lead/Director roles are penalized 20% for mid-level candidates
+1. **Semantic similarity** - resume and JD are embedded using `all-MiniLM-L6-v2` and compared with cosine similarity
+2. **Experience penalty** - jobs requiring significantly more years than you have are penalized (up to 45% reduction)
+3. **Seniority penalty** - Senior/Lead/Director roles are penalized 20% for mid-level candidates
 
 ```
 final_score = base_score × experience_multiplier × seniority_multiplier
@@ -164,13 +164,13 @@ This prevents 10+ year Senior roles from scoring identically to entry-level role
 |------|-------------|
 | Pipeline Overview | Stats, conversion funnel, top 5 matches by source |
 | Job Feed | Scored jobs with filters (score, source, location, recency) + Excel export |
-| Outreach Queue | High-match jobs — recruiter finder + email draft on demand |
+| Outreach Queue | High-match jobs - recruiter finder + email draft on demand |
 | Settings | Edit keywords, locations, and thresholds without touching code |
 
 ### Job Feed Features
 - Filters: score threshold, source, location, posted date (Today / Last 3 days / This week)
-- Skipped jobs accordion — review and un-skip jobs without losing them
-- Unscored jobs accordion — jobs with no description (authwall or JS-rendered)
+- Skipped jobs accordion - review and un-skip jobs without losing them
+- Unscored jobs accordion - jobs with no description (authwall or JS-rendered)
 - One-click Excel export with color-coded match scores
 
 ---
@@ -228,9 +228,9 @@ COIE/
 
 ## Data Management
 
-**`seen_hashes.json`** — prevents duplicate jobs across pipeline runs. Automatically resets every 7 days so fresh listings are always re-evaluated. If you change keywords or locations and want an immediate fresh scrape, delete this file manually.
+**`seen_hashes.json`** - prevents duplicate jobs across pipeline runs. Automatically resets every 7 days so fresh listings are always re-evaluated. If you change keywords or locations and want an immediate fresh scrape, delete this file manually.
 
-**`coie.db`** — stores all jobs, scores, recruiter info, and outreach history. Never deleted automatically — your tracking data (Outreach Sent, Replied, Interview statuses) is preserved indefinitely. Jobs with `New` or `Skipped` status older than 7 days are cleaned up automatically.
+**`coie.db`** - stores all jobs, scores, recruiter info, and outreach history. Never deleted automatically - your tracking data (Outreach Sent, Replied, Interview statuses) is preserved indefinitely. Jobs with `New` or `Skipped` status older than 7 days are cleaned up automatically.
 
 To fully reset and start fresh:
 ```bash
@@ -247,14 +247,14 @@ COIE uses Windows Task Scheduler for automation:
 - **Pipeline**: runs `python -m scheduler.runner` at 09:00 and 18:00 daily (configurable in `config.py`)
 - **API server**: runs `uvicorn api.main:app --port 8000` at system logon with a 15-second delay
 
-See the PRD for detailed Task Scheduler configuration.
+See the [PRD](https://docs.google.com/document/d/1rMvi75cmF6aAds87U7vJeawMMEE4AJGu/edit?usp=sharing&ouid=108416860697060075917&rtpof=true&sd=true) for detailed Task Scheduler configuration.
 
 ---
 
 ## Known Limitations
 
-- LinkedIn jobs often lack descriptions due to the authwall — these appear in the Unscored section and cannot be scored
-- Indeed descriptions require the job panel to load after clicking — occasional misses land in Unscored
-- Hunter.io free tier gives 25 recruiter searches/month — credits only consumed when you click "Perform Outreach"
+- LinkedIn jobs often lack descriptions due to the authwall - these appear in the Unscored section and cannot be scored
+- Indeed descriptions require the job panel to load after clicking - occasional misses land in Unscored
+- Hunter.io free tier gives 25 recruiter searches/month - credits only consumed when you click "Perform Outreach"
 - Config changes take effect on the next scheduled pipeline run, not immediately
-- Adding a new location requires it to exist in the LinkedIn geoId map and Indeed location map — unknown locations fall back to India-wide search
+- Adding a new location requires it to exist in the LinkedIn geoId map and Indeed location map - unknown locations fall back to India-wide search
