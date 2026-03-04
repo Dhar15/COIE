@@ -7,6 +7,7 @@ import json
 
 from scraper.linkedin_scraper import LinkedInScraper
 from scraper.naukri_scraper   import NaukriScraper
+from scraper.indeed_scraper   import IndeedScraper
 from scraper.deduplicator     import deduplicate
 from scorer.scorer            import score_jobs
 from storage.database         import init_db, insert_job, update_score, cleanup_old_jobs
@@ -44,7 +45,7 @@ def run_pipeline():
 
     # 1. Scrape
     all_jobs = []
-    for Scraper in [LinkedInScraper, NaukriScraper]:
+    for Scraper in [LinkedInScraper, NaukriScraper, IndeedScraper]:
         jobs = Scraper().scrape(KEYWORDS, LOCATIONS)
         all_jobs.extend(jobs)
         logger.info(f"{Scraper.SOURCE}: {len(jobs)} jobs fetched")

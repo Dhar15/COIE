@@ -282,7 +282,7 @@ function UnscoredSection({ jobs, onStatusChange }) {
       <div className="unscored-header" onClick={() => setOpen(o => !o)}>
         <span style={{ fontSize:13, fontWeight:700, color:"var(--muted)" }}>Unscored Jobs</span>
         <span className="badge badge-gray">{jobs.length}</span>
-        <span style={{ fontSize:11, color:"var(--muted)", fontFamily:"JetBrains Mono" }}>No description — LinkedIn authwall</span>
+        <span style={{ fontSize:11, color:"var(--muted)", fontFamily:"JetBrains Mono" }}>No description available - cannot score</span>
         <span className={`chevron ${open?"open":""}`}>▶</span>
       </div>
       {open && (
@@ -772,7 +772,7 @@ export default function COIE() {
           <div className="nav-divider"/>
           <div className="nav-meta">
             <div>Threshold: <span style={{color:"var(--accent)"}}>{threshold}%</span></div>
-            <div>Sources: <span style={{color:"var(--text)"}}>LI + Naukri</span></div>
+            <div>Sources: <span style={{color:"var(--text)"}}>LinkedIn + Naukri + Indeed</span></div>
             <div>Unscored: <span style={{color:"var(--warn)"}}>{unscoredJobs.length}</span></div>
           </div>
           <div className="nav-divider"/>
