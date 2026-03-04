@@ -7,6 +7,6 @@
   "locations": [
     "Bengaluru"
   ],
-  "match_threshold": 65,
+  "match_threshold": 70,
   "outreach_threshold": 70
 }

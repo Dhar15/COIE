@@ -210,8 +210,8 @@ function applyFilters(jobs, { minScore, source, posted, location }) {
     if (location !== "All" && !j.location?.toLowerCase().includes(location.toLowerCase())) return false;
     if (posted !== "All") {
       const days = postedDaysAgo(j.posted_text);
-      if (posted === "Today"     && (days === null || days > 1)) return false;
-      if (posted === "This Week" && (days === null || days > 7)) return false;
+      if (posted === "Today"    && (days === null || days >= 1)) return false;
+      if (posted === "3 Days"   && (days === null || days > 3))  return false;
     }
     return true;
   });
@@ -686,9 +686,9 @@ function FiltersBar({ filters, onChange, sources, locations, threshold }) {
       </select>
       <div className="filter-divider"/>
       <select className="filter-select" value={filters.posted} onChange={e => onChange({...filters, posted:e.target.value})}>
-        <option value="All">Any time</option>
+        <option value="All">This week</option>
         <option value="Today">Today</option>
-        <option value="This Week">This week</option>
+        <option value="3 Days">Last 3 days</option>
       </select>
     </div>
   );
