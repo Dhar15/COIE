@@ -215,7 +215,7 @@ class IndeedScraper(BaseScraper):
                 location    = card.get("loc") or location,
                 url         = job_url,
                 description = desc[:3000] if desc else "",
-                posted_text = card.get("posted") or "Today",
+                posted_text = card.get("posted") or "",
             ))
 
         scored = sum(1 for j in jobs if j.description and len(j.description) > 50)

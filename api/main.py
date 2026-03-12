@@ -11,6 +11,7 @@ import sys
 from storage.database import init_db
 from config import DB_PATH
 import json
+from datetime import date
 
 CONFIG_PATH = "data/config.json"
 DEFAULT_CONFIG = {
@@ -49,6 +50,19 @@ def write_config(cfg: dict):
     with open(CONFIG_PATH, "w") as f:
         json.dump(cfg, f, indent=2)
 
+def compute_posted_text(job: dict) -> str:
+    if job.get("source") != "Indeed":
+        return job.get("posted_text") or "—"
+    # Indeed — derive relative label from scraped_at
+    try:
+        scraped = date.fromisoformat(job["scraped_at"][:10])
+        delta = (date.today() - scraped).days
+        if delta == 0:   return "Today"
+        elif delta == 1: return "1 day ago"
+        else:            return f"{delta} days ago"
+    except:
+        return "Today"
+
 @app.get("/api/config")
 def get_config():
     return read_config()
@@ -78,7 +92,10 @@ def get_jobs(min_score: float = 0, limit: int = 100):
             ORDER BY match_score DESC
             LIMIT ?
         """, (min_score, limit)).fetchall()
-    return [dict(r) for r in rows]
+    jobs = [dict(r) for r in rows]
+    for job in jobs:
+        job["posted_text"] = compute_posted_text(job)
+    return jobs
 
 @app.get("/api/jobs/skipped")
 def get_skipped_jobs():
@@ -92,7 +109,10 @@ def get_skipped_jobs():
             WHERE status = 'Skipped'
             ORDER BY match_score DESC
         """).fetchall()
-    return [dict(r) for r in rows]
+    jobs = [dict(r) for r in rows]
+    for job in jobs:
+        job["posted_text"] = compute_posted_text(job)
+    return jobs
 
 
 @app.get("/api/stats")
